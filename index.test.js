@@ -7,8 +7,11 @@ const mockS3Client = mockClient(S3Client); // Mock S3Client
 
 describe("File upload API", () => {
   test("Uploads a file successfully", async () => {
-    const mockFileContent = "Mock file content";
+    const mockFileContent = "Mock file content for testing";
     const mockFileName = "mockfile.txt";
+
+    // Mock S3 putObjectCommand call
+    mockS3Client.on(PutObjectCommand);
 
     // Mock file upload
     const response = await request(app)
