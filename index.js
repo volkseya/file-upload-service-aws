@@ -10,11 +10,21 @@ const port = process.env.PORT || 3000;
 // Multer configuration for file upload
 const upload = multer();
 
-// API endpoint for file upload
 app.post("/upload", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
+
+  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+  if (!allowedTypes.includes(req.file.mimetype)) {
+    return res.status(400).json({ error: "Invalid file type" });
+  }
+
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (req.file.size > maxSize) {
+    return res.status(400).json({ error: "Invalid file size" });
+  }
+
   const credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
