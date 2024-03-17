@@ -40,16 +40,24 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   const s3Client = new S3Client({ region: process.env.S3_REGION, credentials });
   const bucketName = process.env.S3_BUCKET_NAME;
 
-  await s3Client.send(
-    new PutObjectCommand({
-      Bucket: bucketName,
-      Key: fileName,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-    })
-  );
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      })
+    );
 
-  res.status(200).json({ message: "File uploaded successfully" });
+    // Log the file upload activity
+    console.log(`File uploaded: ${fileName}`);
+
+    res.status(200).json({ message: "File uploaded successfully", fileName });
+  } catch (error) {
+    console.error("Error uploading file to S3:", error);
+    res.status(500).json({ error: "Failed to upload file to S3" });
+  }
 });
 
 app.listen(port, () => {
