@@ -3,15 +3,53 @@ import multer from "multer";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import sanitizeFilename from "sanitize-filename";
 import crypto from "crypto";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./swaggerConfig.js"; // Import the swaggerSpec from your configuration file
+
 import * as dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Serve Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Multer configuration for file upload
 const upload = multer();
 
+/**
+ * @swagger
+ * /upload:
+ *   post:
+ *     summary: Upload a file
+ *     description: Uploads a file to the server
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       '200':
+ *         description: File uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 fileName:
+ *                   type: string
+ *       '400':
+ *         description: Invalid request or file type
+ *       '500':
+ *         description: Failed to upload file to server
+ */
 app.post("/upload", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
