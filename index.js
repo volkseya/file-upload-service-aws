@@ -2,14 +2,13 @@ import express from "express";
 import multer from "multer";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import * as dotenv from "dotenv";
-import fs from "fs";
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Multer configuration for file upload
-const upload = multer({ dest: "uploads/" });
+const upload = multer();
 
 // API endpoint for file upload
 app.post("/upload", upload.single("file"), async (req, res) => {
@@ -20,7 +19,6 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   };
-  const fileContent = fs.readFileSync(req.file.path);
   const s3Client = new S3Client({ region: process.env.S3_REGION, credentials });
   const bucketName = process.env.S3_BUCKET_NAME;
 
@@ -28,7 +26,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     new PutObjectCommand({
       Bucket: bucketName,
       Key: req.file.originalname,
-      Body: fileContent,
+      Body: req.file.buffer,
     })
   );
 
