@@ -1,6 +1,8 @@
 import express from "express";
 import multer from "multer";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import sanitizeFilename from "sanitize-filename";
+import crypto from "crypto";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -25,6 +27,12 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     return res.status(400).json({ error: "Invalid file size" });
   }
 
+  const sanitizedFileName = sanitizeFilename(req.file.originalname);
+  // Generate a unique filename using a cryptographic hash
+  const fileName = crypto
+    .createHash("md5")
+    .update(sanitizedFileName)
+    .digest("hex");
   const credentials = {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -35,8 +43,9 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   await s3Client.send(
     new PutObjectCommand({
       Bucket: bucketName,
-      Key: req.file.originalname,
+      Key: fileName,
       Body: req.file.buffer,
+      ContentType: req.file.mimetype,
     })
   );
 
