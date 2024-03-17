@@ -79,6 +79,11 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   const bucketName = process.env.S3_BUCKET_NAME;
 
   try {
+    // Upload to S3 which has an event notification for when a file is uploaded
+    // to automatically send an email via SNS topic.
+    // You can also setup the notification to send an email using SES via integrating Lambda
+    // for a more customizable emails.
+    // https://medium.com/@shubhangorei/triggering-s3-bucket-to-send-mail-via-aws-ses-via-integrating-lambda-37dad87f97f
     await s3Client.send(
       new PutObjectCommand({
         Bucket: bucketName,
